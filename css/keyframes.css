@@ -1,0 +1,51 @@
+﻿@keyframes fly_in_from_left_and_skew {
+    0% {
+        transform: translate(-200%);
+    }
+
+    80% {
+        transform: translate(20%);
+    }
+
+    100% {
+        transform: translate(0), skew(-30deg);
+    }
+}
+
+.fly_in_from_left_and_skew {
+    animation: fly_in_from_left_and_skew 1s;
+}
+
+@keyframes fly_in_from_right_and_skew {
+    0% {
+        transform: translate(200%);
+    }
+
+    80% {
+        transform: translate(-20%);
+    }
+
+    100% {
+        transform: translate(0), skew(-30deg);
+    }
+}
+
+
+.fly_in_from_right_and_skew {
+    animation: fly_in_from_right_and_skew 1s;
+}
+
+
+@keyframes fly_out_to_left {
+    0% {
+        margin-left: 0;
+    }
+
+    100% {
+        margin-left: -100%;
+    }
+}
+
+.fly_out_to_left {
+    animation: fly_out_to_left 1s;
+}

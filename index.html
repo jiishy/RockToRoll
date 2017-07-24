@@ -1,0 +1,106 @@
+﻿<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <link rel="shortcut icon" href="favicon.ico" />
+    <link rel="stylesheet" type="text/css" href="css/rock_to_roll.css" />
+    <title>Rock to roll</title>
+</head>
+<body>
+    <div id="start_page" class="page page--active">
+        <div class="title">ROCK TO ROLL</div>
+        <div class="container">
+            <div class="btn skew fly_in_from_left_and_skew" onclick="change_page('level_mode')">LEVEL MODE</div>
+            <div class="btn skew fly_in_from_right_and_skew" onclick="change_page('free_mode')">FREE MODE</div>
+            <div class="btn skew fly_in_from_left_and_skew" onclick="change_page('about_game')">ABOUT GAME</div>
+        </div>
+    </div>
+    <div id="level_mode" class="page">
+        <div class="title">LEVEL MODE</div>
+        <!--
+        <div class="container space-around">
+            <div class="btn skew fly_in_from_left_and_skew file">
+                SELECT<input type="file" id="file_input1">
+            </div>
+            <div class="btn skew fly_in_from_right_and_skew" onclick="change_page('create_music')">
+                CREATE
+            </div>
+        </div>
+            
+        -->
+        <div class="container">
+            <div class="btnMode" id="slider">
+                <a href="javascript:void(0);" class="prev btn"></a>
+                <div class="scroll">
+                    <ul class="scrollContainer">
+                        <li class="panel" id="panel_1">
+                            <a href="" class="inside" target="_blank">
+                                <img width="130" height="295" src="res/img/music1.jpg" />
+                                <span>Level1</span>
+                            </a>
+                        </li>
+                        <li class="panel current" id="panel_2">
+                            <a href="" class="inside" target="_blank">
+                                <img width="130" height="295" src="res/img/music2.jpg" />
+                                <span>Level2</span>
+                            </a>
+                        </li>
+                        <li class="panel" id="panel_3">
+                            <a href="" class="inside" target="_blank">
+                                <img width="130" height="295"  src="res/img/music3.jpg" />
+                                <span>Level3</span>
+                            </a>
+                        </li>
+                        <li class="panel" id="panel_4">
+                            <a href="" class="inside" target="_blank">
+                                <img width="130" height="295" src="res/img/music4.jpg" />
+                                <span>Level4</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <a href="javascript:void(0);" class="next btn"></a>
+            </div>
+            <!--div class="row_group">
+                <div class="triangle left"></div>
+                <img src="" alt="NO PICTRE" class="music_picture" />
+                <div class="triangle right"></div>
+            </div-->
+        </div>
+        <div class="footer">
+            <div class="btn inline" onclick="change_page('start_page')">BACK</div>
+            <div class="btn inline" onclick="change_page('start_game');">START</div>
+        </div>
+    </div>
+    <div id="free_mode" class="page">
+        <div class="title">FREE MODE</div>
+        <div class="container space-around">
+            <div class="btn skew fly_in_from_left_and_skew file">
+                SELECT<input type="file" id="file_input">
+            </div>
+            <div class="btn skew fly_in_from_right_and_skew" onclick="change_page('create_music')">
+                CREATE
+            </div>
+        </div>
+        <div class="footer">
+            <div class="btn inline" onclick="change_page('start_page')">BACK</div>
+            <div class="btn inline" onclick="change_page('start_game')">START</div>
+        </div>
+    </div>
+    <div id="start_game" class="page">
+        <audio src="" controls="controls" crossOrigin="anonymous"></audio>
+        <div class="btn inline" onclick="change_page('start_page')" style="position:absolute;top:0;right:0;width:auto;height:auto;">BACK</div>
+        <canvas id="game_canvas"></canvas>
+    </div>
+    <div id="about_game" class="page">
+        <div class="title">ABOUT GAME</div>
+        <div class="footer">
+            <div class="btn inline" onclick="change_page('start_page')">BACK</div>
+        </div>
+    </div>
+    <script charset="utf-8" type="text/javascript" src="js/jquery-3.2.1.min.js"></script>
+    <script charset="utf-8" type="text/javascript" src="js/rock_to_roll.js"></script>
+    <script charset="utf-8" type="text/javascript" src="js/scroll_img.js"></script>
+</body>
+</html>
