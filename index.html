@@ -10,11 +10,15 @@
 <body>
     <div id="start_page" class="page page--active">
         <div class="title">ROCK TO ROLL</div>
-        <div class="container">
+        <div id="divFly" >
+            <img src="res/img/122.png" width="90" height="50"/>
+        </div>
+        <div class="container ">
             <div class="btn skew fly_in_from_left_and_skew" onclick="change_page('level_mode')">LEVEL MODE</div>
-            <div class="btn skew fly_in_from_right_and_skew" onclick="change_page('free_mode')">FREE MODE</div>
+            <div class="btn skew fly_in_from_right_and_skew " onclick="change_page('free_mode')">FREE MODE</div>
             <div class="btn skew fly_in_from_left_and_skew" onclick="change_page('about_game')">ABOUT GAME</div>
         </div>
+
     </div>
     <div id="level_mode" class="page">
         <div class="title">LEVEL MODE</div>
@@ -77,11 +81,12 @@
         <div class="title">FREE MODE</div>
         <div class="container space-around">
             <div class="btn skew fly_in_from_left_and_skew file">
-                SELECT<input type="file" id="file_input">
+                SELECT<input type="file" id="file_input_music">
             </div>
             <div class="btn skew fly_in_from_right_and_skew" onclick="change_page('create_music')">
                 CREATE
             </div>
+
         </div>
         <div class="footer">
             <div class="btn inline" onclick="change_page('start_page')">BACK</div>
@@ -91,7 +96,25 @@
     <div id="start_game" class="page">
         <audio src="" controls="controls" crossOrigin="anonymous"></audio>
         <div class="btn inline" onclick="change_page('start_page')" style="position:absolute;top:0;right:0;width:auto;height:auto;">BACK</div>
+        <span class="score" id="score" ></span>
         <canvas id="game_canvas"></canvas>
+    </div>
+<div id="create_music" class="page">
+        <div class="title">CREATE MUSIC</div>
+        <div class="container">
+            <div class="row_group">
+                <div id="music_graph_scroll_area" class="scroll_area">
+                    <canvas id="music_editor_graph" tabindex ="0" class="music_editor_graph"></canvas>
+                </div>
+                <textarea id="music_editor_text" class="music_editor_text"></textarea>
+            </div>
+        </div>
+        <div class="footer">
+            <div class="btn inline" onclick="change_page('start_page')">BACK</div>
+            <div class="btn inline" onclick="music_editor_toggle()">SWITCH</div>
+            <div class="btn inline" onclick="analyse_music()">PLAY</div>
+            <div class="btn inline" onclick="change_page('start_game')">START</div>
+        </div>
     </div>
     <div id="about_game" class="page">
         <div class="title">ABOUT GAME</div>
@@ -99,8 +122,10 @@
             <div class="btn inline" onclick="change_page('start_page')">BACK</div>
         </div>
     </div>
+
     <script charset="utf-8" type="text/javascript" src="js/jquery-3.2.1.min.js"></script>
     <script charset="utf-8" type="text/javascript" src="js/rock_to_roll.js"></script>
     <script charset="utf-8" type="text/javascript" src="js/scroll_img.js"></script>
+    <script charset="utf-8" type="text/javascript" src="js/btn_effects.js"></script>
 </body>
 </html>
