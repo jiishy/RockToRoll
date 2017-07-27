@@ -5,54 +5,40 @@
     <meta charset="utf-8" />
     <link rel="shortcut icon" href="favicon.ico" />
     <link rel="stylesheet" type="text/css" href="css/rock_to_roll.css" />
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css" />
     <title>Rock to roll</title>
 </head>
 <body>
     <div id="start_page" class="page page--active">
         <div class="title">ROCK TO ROLL</div>
-        <div id="divFly" >
-            <img src="res/img/122.png" width="90" height="50"/>
-        </div>
         <div class="container ">
             <div class="btn skew fly_in_from_left_and_skew" onclick="change_page('level_mode')">LEVEL MODE</div>
             <div class="btn skew fly_in_from_right_and_skew " onclick="change_page('free_mode')">FREE MODE</div>
             <div class="btn skew fly_in_from_left_and_skew" onclick="change_page('about_game')">ABOUT GAME</div>
         </div>
-
     </div>
     <div id="level_mode" class="page">
         <div class="title">LEVEL MODE</div>
-        <!--
         <div class="container space-around">
-            <div class="btn skew fly_in_from_left_and_skew file">
-                SELECT<input type="file" id="file_input1">
-            </div>
-            <div class="btn skew fly_in_from_right_and_skew" onclick="change_page('create_music')">
-                CREATE
-            </div>
-        </div>
-            
-        -->
-        <div class="container">
             <div class="btnMode" id="slider">
                 <a href="javascript:void(0);" class="prev btn"></a>
                 <div class="scroll">
                     <ul class="scrollContainer">
                         <li class="panel" id="panel_1">
                             <a href="" class="inside" target="_blank">
-                                <img width="130" height="295" src="res/img/music1.jpg" />
-                                <span>Level1</span>
+                                <img width="130" height="295" src="res/level/level_1.jpg" />
+                                <span>Level1 惜言-不才</span>
                             </a>
                         </li>
                         <li class="panel current" id="panel_2">
                             <a href="" class="inside" target="_blank">
                                 <img width="130" height="295" src="res/img/music2.jpg" />
-                                <span>Level2</span>
+                                <span>Level2 克罗地亚狂想曲</span>
                             </a>
                         </li>
                         <li class="panel" id="panel_3">
                             <a href="" class="inside" target="_blank">
-                                <img width="130" height="295"  src="res/img/music3.jpg" />
+                                <img width="130" height="295" src="res/img/music3.jpg" />
                                 <span>Level3</span>
                             </a>
                         </li>
@@ -66,11 +52,6 @@
                 </div>
                 <a href="javascript:void(0);" class="next btn"></a>
             </div>
-            <!--div class="row_group">
-                <div class="triangle left"></div>
-                <img src="" alt="NO PICTRE" class="music_picture" />
-                <div class="triangle right"></div>
-            </div-->
         </div>
         <div class="footer">
             <div class="btn inline" onclick="change_page('start_page')">BACK</div>
@@ -81,12 +62,14 @@
         <div class="title">FREE MODE</div>
         <div class="container space-around">
             <div class="btn skew fly_in_from_left_and_skew file">
-                SELECT<input type="file" id="file_input_music">
+                AUTO<input type="file" id="file_input_music">
             </div>
             <div class="btn skew fly_in_from_right_and_skew" onclick="change_page('create_music')">
-                CREATE
+                COMPOSE
             </div>
-
+            <div class="btn skew fly_in_from_left_and_skew" onclick="change_page('file_produce')">
+                FILE
+            </div>
         </div>
         <div class="footer">
             <div class="btn inline" onclick="change_page('start_page')">BACK</div>
@@ -95,37 +78,88 @@
     </div>
     <div id="start_game" class="page">
         <audio src="" controls="controls" crossOrigin="anonymous"></audio>
-        <div class="btn inline" onclick="change_page('start_page')" style="position:absolute;top:0;right:0;width:auto;height:auto;">BACK</div>
-        <span class="score" id="score" ></span>
-        <canvas id="game_canvas"></canvas>
+        <div class="btn inline" onclick="change_page('game_mode')" style="position:absolute;top:0;right:0;width:auto;height:auto;">BACK</div>
+        <span class="score" id="score">Score : 0</span>
+        <canvas id="game_canvas" style="z-index:1"></canvas>
+        <canvas id="power_canvas" style="position:absolute;z-index:2;top:0;left:-5%;"></canvas>
+        <div id="progressbar" style="position:absolute;top:50%;right:-15%;width:40%"></div>
+        <div id="hit_tag_left" class="hit_tag"></div>
+        <div id="hit_tag_up" class="hit_tag"></div>
+        <div id="hit_tag_right" class="hit_tag"></div>
+        <div id="hit_tag_down" class="hit_tag"></div>
+        <div id="shine_left" class="shine rotate"></div>
+        <div id="shine_up" class="shine rotate"></div>
+        <div id="shine_right" class="shine rotate"></div>
+        <div id="shine_down" class="shine rotate"></div>
     </div>
-<div id="create_music" class="page">
+    <div id="finish_game" class="page">
+        <div class="title">YOUR SCORE</div>
+        <div class="title" id="final_score"></div>
+        <div id="rank"></div>
+        <div class="container">
+            <div class="statement">
+                <div id="perfect"  style="text-align:left;"></div>
+                <div id="good" style="text-align:left;"></div>
+                <div id="miss" style="text-align:left;"></div>
+                <div id="max_combo" style="text-align:left;"></div>
+            </div>
+        </div>
+        <div class="footer">
+            <div class="btn inline" onclick="change_page('game_mode')">BACK</div>
+        </div>
+    </div>
+    <div id="create_music" class="page">
         <div class="title">CREATE MUSIC</div>
         <div class="container">
             <div class="row_group">
                 <div id="music_graph_scroll_area" class="scroll_area">
-                    <canvas id="music_editor_graph" tabindex ="0" class="music_editor_graph"></canvas>
+                    <canvas id="music_editor_graph" tabindex="0" class="music_editor_graph"></canvas>
                 </div>
                 <textarea id="music_editor_text" class="music_editor_text"></textarea>
             </div>
         </div>
         <div class="footer">
-            <div class="btn inline" onclick="change_page('start_page')">BACK</div>
+            <div class="btn inline" onclick="change_page('free_mode')">BACK</div>
             <div class="btn inline" onclick="music_editor_toggle()">SWITCH</div>
             <div class="btn inline" onclick="analyse_music()">PLAY</div>
             <div class="btn inline" onclick="change_page('start_game')">START</div>
         </div>
     </div>
+    <div id="file_produce" class="page">
+        <div class="title">FREE MODE</div>
+        <div class="container space-around">
+            <div class="btn skew fly_in_from_left_and_skew file">
+                MUSIC<input type="file" id="file_produce_music">
+            </div>
+            <div class="btn skew fly_in_from_right_and_skew file">
+                TEXT<input type="file" id="file_produce_text">
+            </div>
+        </div>
+        <div class="footer">
+            <div class="btn inline" onclick="change_page('free_mode')">BACK</div>
+            <div class="btn inline" onclick="change_page('start_game')">START</div>
+        </div>
+    </div>
     <div id="about_game" class="page">
         <div class="title">ABOUT GAME</div>
+        <div class="container space-around">
+            <div class="statement">
+                This is a music game provided by jiishy and Five X.
+            </div>
+            <a href="readme.txt">view details</a>
+        </div>
         <div class="footer">
             <div class="btn inline" onclick="change_page('start_page')">BACK</div>
         </div>
     </div>
-
+    <div id="divFly">
+        <img src="res/img/122.png" width="90" height="50" />
+    </div>
     <script charset="utf-8" type="text/javascript" src="js/jquery-3.2.1.min.js"></script>
     <script charset="utf-8" type="text/javascript" src="js/rock_to_roll.js"></script>
     <script charset="utf-8" type="text/javascript" src="js/scroll_img.js"></script>
     <script charset="utf-8" type="text/javascript" src="js/btn_effects.js"></script>
+    <script src="//apps.bdimg.com/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
+    <script charset="utf-8" type="text/javascript" src="js/power_effects.js"></script>
 </body>
 </html>

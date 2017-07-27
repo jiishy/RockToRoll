@@ -49,3 +49,55 @@
 .fly_out_to_left {
     animation: fly_out_to_left 1s;
 }
+
+@keyframes rotate {
+    0% {
+        transform: rotate(0);
+        background-image: url('/res/img/shine.png')
+    }
+
+    12.5% {
+        transform: rotate(45deg);
+        background-image: url('/res/img/shine_short.png');
+    }
+
+    25% {
+        transform: rotate(90deg);
+        background-image: url('/res/img/shine.png');
+    }
+    
+    37.5% {
+        transform: rotate(135deg);
+        background-image: url('/res/img/shine_short.png');
+    }
+
+    50% {
+        transform: rotate(180deg);
+        background-image: url('/res/img/shine.png');
+    }
+
+    62.5% {
+        transform: rotate(225deg);
+        background-image: url('/res/img/shine_short.png');
+    }
+
+    75% {
+        transform: rotate(270deg);
+        background-image: url('/res/img/shine.png');
+    }
+
+    87.5% {
+        transform: rotate(315deg);
+        background-image: url('/res/img/shine_short.png');
+    }
+
+    100% {
+        transform: rotate(360deg);
+        background-image: url('/res/img/shine.png');
+    }
+}
+
+.rotate {
+    transform-origin: 50% 50%;
+    animation: rotate 0.5s linear infinite;
+}

@@ -1,17 +1,21 @@
 ﻿@import url('./keyframes.css');
 
 @font-face {
-    font-family: 'LeviBrush Regular';   /*字体名称*/
-    src: url('../res/fonts/LEVIBRUSH.TTF');       /*字体源文件*/
+    font-family: 'LeviBrush Regular'; /*字体名称*/
+    src: url('../res/fonts/LEVIBRUSH.TTF'); /*字体源文件*/
 }
-
+@font-face {
+    font-family: 'Hang the DJ'; /*字体名称*/
+    src: url('../res/fonts/Hang the DJ.ttf'); /*字体源文件*/
+}
 * {
     margin: 0;
     padding: 0;
     border: 0;
-    font-family: Arial, sans-serif;
+    font-family: 'LeviBrush Regular', sans-serif;
     text-align: center;
     color: white;
+    cursor: none;
 }
 
 body {
@@ -44,6 +48,14 @@ body {
         justify-content: space-around;
     }
 
+#start_page .title {
+    top: 5%;
+}
+
+#start_page .container {
+    top: 30%;
+}
+
 .footer {
     width: 60%;
     height: 20%;
@@ -54,6 +66,7 @@ body {
     display: flex;
     align-items: center;
 }
+
 .page {
     flex-shrink: 0;
     width: 100vw;
@@ -88,7 +101,7 @@ body {
     margin: 0 auto;
     /*background-color: blueviolet;*/
     opacity: 0.7;
-    cursor: pointer;
+    /*cursor: pointer;*/
     font-family: LeviBrush Regular;
 }
 
@@ -120,7 +133,7 @@ body {
     font-size: 10vh;
 }
 
-.triangle {
+/*.triangle {
     width: 0;
     height: 0;
     display: inline-block;
@@ -136,15 +149,15 @@ body {
         border-top: 50px solid transparent;
         border-left: 100px solid green;
         border-bottom: 50px solid transparent;
-    }
+    }*/
 
-.handle {
+/*.handle {
     max-height: 50%;
     position: absolute;
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
-}
+}*/
 
 .btn.file {
     position: relative;
@@ -170,7 +183,6 @@ canvas {
 
 .scroll_area {
     overflow-y: scroll;
-    /*border: 1px solid white;*/
     width: 100%;
     height: 100%;
     padding: 0;
@@ -191,115 +203,143 @@ canvas {
     display: none;
 }
 
-.score{
+.score {
     width: auto;
     font-size: 9vh;
-    left:0;
-    top:0;
-    position:absolute;
+    left: 0;
+    top: 0;
+    position: absolute;
     font-family: "LeviBrush Regular";
 }
-/*slider*/
-.scroll
-{
-    width:620px;
-    height:312px;
-    margin:0 auto;
-    overflow:hidden;
-    position:relative;
-}
-.scrollContainer
-{
-    position: relative;
-    width:1815px;
-    left:0px;
-}
-.scrollContainer .current .inside
-{
-    width:230px;
-    height:288px;
-}
-.scrollContainer .panel
-{
-    width:170px;
-    height:235px;
-    float: left;
-    margin-right:25px;
-    display:inline;
-}
-.panel .inside
-{
-    display:block;
-    position:relative;
-}
-.inside img
-{
-    height:100%;
-    width:100%;
-}
-.scroll li .inside span
-{
-    width:197px;
-    height:37px;
-    line-height:37px;
-    display:none;
-    position:absolute;
-    bottom:-17px;
-    left:16px;
-    background-color:#c69;
-    font-size:14px;
-    color:#FFF;
-    text-align:center;
-}
-.scroll li.current .inside span
-{
-    display:block;
-}
-.btnMode a.btn
-{
-    background:url('../res/img/img_change.png') no-repeat;
-}
-.btnMode a.btn
-{
-    width:20px;
-    height:39px;
-    position:absolute;
-    top:125px;
-}
-.btnMode a.prev
-{
-    left:0;
-    background-position:0 -61px;
-}
-.btnMode a.prev:hover{
-    background-position:0 -102px;
-}
-.btnMode a.next
-{
-    right:0;
-    background-position:-50px -61px;
-}
-.btnMode a.next:hover
-{
-    background-position:-50px -102px;
+
+.statement {
+    font-size: 6vh;
+    top:25%;
+    left:45%;
+    position: absolute;
+    text-align: left;
+    width:50%;
 }
 
+.hit_tag {
+    position: absolute;
+    opacity: 0;
+    font-size: 9vh;
+}
+
+.shine {
+    background: url('/res/img/shine.png');
+    width: 19.2vh;
+    height: 10.8vh;
+    background-size: cover;
+    position: absolute;
+    left:50%;
+    top: 50%;
+}
+
+/*slider*/
+.scroll {
+    width: 620px;
+    height: 312px;
+    margin: 0 auto;
+    overflow: hidden;
+    position: relative;
+}
+
+.scrollContainer {
+    position: relative;
+    width: 1815px;
+    left: 0px;
+}
+
+    .scrollContainer .current .inside {
+        width: 230px;
+        height: 288px;
+    }
+
+    .scrollContainer .panel {
+        width: 170px;
+        height: 235px;
+        float: left;
+        margin-right: 25px;
+        display: inline;
+    }
+
+.panel .inside {
+    display: block;
+    position: relative;
+}
+
+.inside img {
+    height: 100%;
+    width: 100%;
+}
+
+.scroll li .inside span {
+    width: 197px;
+    height: 37px;
+    line-height: 37px;
+    display: none;
+    position: absolute;
+    bottom: -17px;
+    left: 16px;
+    background-color: #c69;
+    font-size: 14px;
+    color: #FFF;
+    text-align: center;
+}
+
+.scroll li.current .inside span {
+    display: block;
+}
+
+.btnMode a.btn {
+    background: url('../res/img/img_change.png') no-repeat;
+}
+
+.btnMode a.btn {
+    width: 20px;
+    height: 39px;
+    position: absolute;
+    top: 125px;
+}
+
+.btnMode a.prev {
+    left: 0;
+    background-position: 0 -61px;
+}
+
+    .btnMode a.prev:hover {
+        background-position: 0 -102px;
+    }
+
+.btnMode a.next {
+    right: 0;
+    background-position: -50px -61px;
+}
+
+    .btnMode a.next:hover {
+        background-position: -50px -102px;
+    }
+
 /*button effects*/
-.rain{
+.rain {
     -webkit-animation-direction: normal;
     -webkit-animation-duration: 20s;
     -webkit-animation-iteration-count: infinite;
     -webkit-animation-name: colors;
     -webkit-animation-timing-function: ease;
     padding: 10px 12px 12px 10px;
-   -webkit-box-shadow: 8px 8px 8px rgba(0,0,0,1) inset, -9px -9px 8px rgba(0,0,0,1) inset;
+    -webkit-box-shadow: 8px 8px 8px rgba(0,0,0,1) inset, -9px -9px 8px rgba(0,0,0,1) inset;
     box-shadow: 8px 8px 8px rgba(0,0,0,1) inset, -9px -9px 8px rgba(0,0,0,1) inset;
 }
-.border{
+
+.border {
     padding: 1px;
     border-radius: 5px;
 }
-.start{
+
+.start {
     background-repeat: repeat-x, repeat-x, repeat-x, repeat-x;
     background-position: 0 0, 0 0, 0 0, 0 0;
     /* Blue-ish Green Fallback for Mozilla */
@@ -308,15 +348,39 @@ canvas {
     background-image: -webkit-gradient(linear, left top, right top, color-stop(1%,rgba(0,0,0,.3)), color-stop(23%,rgba(0,0,0,.1)), color-stop(40%,rgba(255,231,87,.1)), color-stop(61%,rgba(255,231,87,.2)), color-stop(70%,rgba(255,231,87,.1)), color-stop(80%,rgba(0,0,0,.1)), color-stop(100%,rgba(0,0,0,.25)));
     /* Starting Color */
 }
+
 @-webkit-keyframes colors {
-    0% {box-shadow: 8px 8px 8px rgba(242,70,201,1) inset, -9px -9px 8px rgba(242,70,201,1) inset;}
-    15% {box-shadow: 8px 8px 8px rgba(68,83,242,1) inset, -9px -9px 8px rgba(68,83,242,1) inset;}
-    30% {box-shadow: 8px 8px 8px rgba(68,83,242,1) inset, -9px -9px 8px rgba(68,83,242,1) inset;}
-    45% {box-shadow: 8px 8px 8px rgba(232,86,242,1) inset, -9px -9px 8px rgba(232,86,242,1) inset;}
-    60% {box-shadow: 8px 8px 8px rgba(193,102,242,1) inset, -9px -9px 8px rgba(193,102,242,1) inset;}
-    75% {box-shadow: 8px 8px 8px rgba(0,199,206,1) inset, -9px -9px 8px rgba(0,199,206,1) inset;}
-    90% {box-shadow: 8px 8px 8px rgba(75,92,242,1) inset, -9px -9px 8px rgba(75,92,242,1) inset;}
-    100% {box-shadow: 8px 8px 8px rgba(242,70,201,1) inset, -9px -9px 8px rgba(242,70,201,1) inset;}
+    0% {
+        box-shadow: 8px 8px 8px rgba(242,70,201,1) inset, -9px -9px 8px rgba(242,70,201,1) inset;
+    }
+
+    15% {
+        box-shadow: 8px 8px 8px rgba(68,83,242,1) inset, -9px -9px 8px rgba(68,83,242,1) inset;
+    }
+
+    30% {
+        box-shadow: 8px 8px 8px rgba(68,83,242,1) inset, -9px -9px 8px rgba(68,83,242,1) inset;
+    }
+
+    45% {
+        box-shadow: 8px 8px 8px rgba(232,86,242,1) inset, -9px -9px 8px rgba(232,86,242,1) inset;
+    }
+
+    60% {
+        box-shadow: 8px 8px 8px rgba(193,102,242,1) inset, -9px -9px 8px rgba(193,102,242,1) inset;
+    }
+
+    75% {
+        box-shadow: 8px 8px 8px rgba(0,199,206,1) inset, -9px -9px 8px rgba(0,199,206,1) inset;
+    }
+
+    90% {
+        box-shadow: 8px 8px 8px rgba(75,92,242,1) inset, -9px -9px 8px rgba(75,92,242,1) inset;
+    }
+
+    100% {
+        box-shadow: 8px 8px 8px rgba(242,70,201,1) inset, -9px -9px 8px rgba(242,70,201,1) inset;
+    }
 }
 /*
 @-webkit-keyframes colors {
@@ -330,7 +394,39 @@ canvas {
     100% {background-color: #39f;}
 }*/
 
-#divFly{
-    position:absolute;
+#divFly {
+    pointer-events: none;
+    position: absolute;
     background: transparent;
+}
+
+#progressbar .ui-progressbar-value {
+    background-color: #ccc;
+}
+/* progressbar*/
+#progressbar{
+    transform: rotate(-90deg);
+    background: transparent;
+}
+#progressbar .ui-progressbar{
+    padding:1px;
+}
+#progressbar .ui-progressbar-value{
+    background : LightBlue;
+}
+
+#power_canvas{
+    position: absolute;
+}
+
+#final_score{
+    top:20%
+}
+#rank{
+    top:30%;
+    left:25%;
+    width:auto;
+    height:auto;
+    font-size:40vh;
+    position:absolute;
 }

@@ -1,4 +1,5 @@
 /// <reference path='jquery-3.2.1.min.js' />
+/// <referencs path='jquery-ui.min.js' />
 
 (function (window) {
     var audio = $('audio').get(0);
@@ -15,7 +16,7 @@
     delay2.delayTime.value = 0.5;
     delay2.connect(audioContext.destination);
 
-    var speed_time = 1.5;
+    var speed_time = 1500;
 
     var game_canvas = $('canvas').get(0);
     var game_context = game_canvas.getContext('2d');
@@ -30,19 +31,47 @@
     var timer_interval = 30;
     var main_timer = undefined;
     var keys = [];
+    var long_keys = [];
     var directions = ['left', 'up', 'right', 'down'];
     var dir_params = { 'left': [false, true], 'up': [true, true], 'right': [false, false], 'down': [true, false] };
     var press = new Array(directions.length);
     var key_size = 20;
     var handle_size = game_canvas.height < game_canvas.width ? game_canvas.height : game_canvas.width;
     handle_size /= 3;
-    var score;
-    var miss;
     var status = 0;
     var perf_interval = 0.04; //perfect interval
     var good_interval = 0.08;
-    var combo = 0;
-    var is_combo = false;
+    var game_finish_wait_time = 3000;
+    var game_mode = ''
+
+    var cl;
+    var power = 100;
+    var progressbar = $("#progressbar");
+    var power_canvas = $('canvas').get(1);
+    var power_context = power_canvas.getContext('2d');
+    power_canvas.width = document.body.clientWidth;
+    power_canvas.height = document.body.clientHeight;
+
+    var score_unit = {};
+    score_unit.init = function () {
+        this.score = 0;
+        this.max_combo = 0;
+        this.combo = 0;
+        this.perfect = 0;
+        this.good = 0;
+        this.miss = 0;
+        this.cur_miss = 0;
+        this.all = 0;
+        this.tap_times = 0;
+    }
+    score_unit.init();
+
+    var hit_tags = [
+        { x: 0.25, y: 0.25 },
+        { x: 0.75, y: 0.25 },
+        { x: 0.75, y: 0.75 },
+        { x: 0.25, y: 0.75 }
+    ];
 
     game_context.draw_round_rect = function (x, y, w, h, r, stroke_color, fill_color, line_width) {
         this.beginPath();
@@ -88,8 +117,17 @@
 
     window.change_page = function (page) {
         var cur_page = $('.page--active');
-        if (cur_page.prop('id') === page)
+        if (cur_page.prop('id') === page){
+            if(cl.goal == 0){
+                clearInterval(main_timer);
+            }
             return;
+        }
+        status = 0;
+        if (main_timer) {
+            clearInterval(main_timer);
+        }
+        $('audio').get(0).pause();
         switch (page) {
             case 'level_mode':
                 break;
@@ -98,17 +136,21 @@
             case 'about_game':
                 break;
             case 'start_page':
-                if (main_timer) {
-                    clearInterval(main_timer);
-                }
-                status = 0;
-                $('audio').get(0).pause();
                 break;
             case 'start_game':
-                start_game(cur_page.prop('id'));
+                game_mode = cur_page.prop('id')
+                start_game(game_mode);
                 break;
             case 'create_music':
                 music_graph.draw();
+                break;
+            case 'file_produce':
+                break;
+            case 'finish_game':
+                on_finish(game_mode);
+                break;
+            case 'game_mode':
+                page = game_mode;
                 break;
             default:
                 return;
@@ -125,18 +167,12 @@
     window.start_game = function (mode) {
         switch (mode) {
             case 'level_mode':
-                var files = $('#file_input_level').get(0).files;
-                var reader = new FileReader();
-                if (files.length) {
-                    var file = files[0];
-                    if (/text+/.test(file.type)) {
-                        reader.onload = function () {
-                            launcher.load(this.result);
-                            on_start(mode);
-                        }
-                    }
-                    reader.readAsText(file);
-                }
+                var level = parseInt($('.current').prop('id').replace('panel_', ''));
+                $('audio').attr('src', `res/level/level_${level}.mp3`);
+                $.getJSON(`res/level/level_${level}.json`, function (data) {
+                    scheduler.load(data[0]);
+                    on_start(mode);
+                });
                 break;
             case 'free_mode':
                 var files = $('#file_input_music').get(0).files;
@@ -159,12 +195,39 @@
             case 'create_music':
                 on_start(mode);
                 break;
+            case 'file_produce':
+                var files = $('#file_produce_music').get(0).files;
+                var reader = new FileReader();
+                if (files.length) {
+                    var file = files[0];
+                    if (/audio+/.test(file.type)) {
+                        reader.onload = function () {
+                            $('audio').attr('src', this.result);
+                            var _files = $('#file_produce_text').get(0).files;
+                            var _reader = new FileReader();
+                            if (_files.length) {
+                                var _file = _files[0];
+                                if (/text+/.test(_file.type)) {
+                                    _reader.onload = function () {
+                                        scheduler.load(this.result);
+                                        on_start(mode);
+                                    }
+                                }
+                                _reader.readAsText(_file);
+                            }
+                        }
+                    }
+                    reader.readAsDataURL(file);
+                }
+                break;
             default:
                 break;
         }
     }
 
     window.onresize = function () {
+        power_canvas.width = document.body.clientWidth;
+        power_canvas.height = document.body.clientHeight;
         game_canvas.width = document.body.clientWidth;
         game_canvas.height = document.body.clientHeight;
         handle_size = game_canvas.height < game_canvas.width ? game_canvas.height : game_canvas.width;
@@ -172,6 +235,22 @@
         keys.forEach(key => {
             key.r = handle_size / 4;
         });
+        var elem = document.getElementById('shine_left');
+        elem.style.left = game_canvas.width / 2 - handle_size / 2 - elem.clientWidth / 2 + 'px';
+        elem.style.top = game_canvas.height / 2 - elem.clientHeight / 2 + 'px';
+
+        var elem = document.getElementById('shine_up');
+        elem.style.left = game_canvas.width / 2 - elem.clientWidth / 2 + 'px';
+        elem.style.top = game_canvas.height / 2 - handle_size / 2 - elem.clientHeight / 2 + 'px';
+
+        var elem = document.getElementById('shine_right');
+        elem.style.left = game_canvas.width / 2 + handle_size / 2 - elem.clientWidth / 2 + 'px';
+        elem.style.top = game_canvas.height / 2 - elem.clientHeight / 2 + 'px';
+
+        var elem = document.getElementById('shine_down');
+        elem.style.left = game_canvas.width / 2 - elem.clientWidth / 2 + 'px';
+        elem.style.top = game_canvas.height / 2 + handle_size / 2 - elem.clientHeight / 2 + 'px';
+
         draw_all();
         music_graph.update_size();
     }
@@ -182,6 +261,8 @@
         var key = event.which || event.keyCode;
         var index = parseInt(key) - 37;
         if (index < 0 || index >= directions.length)
+            return;
+        if (press[index] == true)
             return;
         press[index] = true;
         check_direction(index);
@@ -203,6 +284,7 @@
         var is_vertical;
         var is_top_left;
         var rate;
+        var type;
         switch (directions[index]) {
             case 'up':
                 is_vertical = true;
@@ -228,33 +310,99 @@
                 return;
         }
         for (var i = 0; i < keys.length; ++i) {
-            if (keys[i].is_top_left == is_top_left && keys[i].is_vertical == is_vertical) {
+            if (keys[i].is_miss == 0 && keys[i].is_top_left == is_top_left && keys[i].is_vertical == is_vertical) {
                 if (keys[i].pos > rate - perf_interval && keys[i].pos < rate + perf_interval) {
-                    //perfect
-                    console.log("perfect");
+                    type = 'perfect';
                 }
                 else if (keys[i].pos > rate - good_interval && keys[i].pos < rate + good_interval) {
-                    console.log("good");
+                    type = 'good';
                 }
                 else
                     continue;
-                keys.splice(i, 1);
-                add_score();
+                keys[i].is_hit = true;
+                var temp = keys.splice(i, 1);
+                if (temp[0].type == 'long' && temp[0].tail_length > 0) {
+                    $('#shine_' + directions[index]).css('display', 'block');
+                    temp[0].pos = rate;
+                    temp.push(index);
+                    long_keys.push(temp);
+                }
+                add_score(index, type);
                 break;
             }
         }
     }
 
-    window.add_score = function () {
-        if (!is_combo)
-            is_combo = true;
-        if (combo > 40)
-            score += 5;
-        else if (combo > 20)
-            score += 3;
+    window.show_hit_tag = function (dir_index, type) {
+        document.getElementById("score").innerHTML = "Score :" + score_unit.score;
+        var elem = document.getElementById('hit_tag_' + directions[dir_index]);
+        var hit_tag_color = { 'perfect': '#FFEE18', 'good': '#59C150', 'miss': '#FF1493' };
+        switch (directions[dir_index]) {
+            case 'left':
+                elem.style.right = (game_canvas.width + handle_size) / 2 + 'px';
+                elem.style.bottom = (game_canvas.height + handle_size) / 2 + 'px';
+                break;
+            case 'up':
+                elem.style.left = (game_canvas.width + handle_size) / 2 + 'px';
+                elem.style.bottom = (game_canvas.height + handle_size) / 2 + 'px';
+                break;
+            case 'right':
+                elem.style.left = (game_canvas.width + handle_size) / 2 + 'px';
+                elem.style.top = (game_canvas.height + handle_size) / 2 + 'px';
+                break;
+            case 'down':
+                elem.style.right = (game_canvas.width + handle_size) / 2 + 'px';
+                elem.style.top = (game_canvas.height + handle_size) / 2 + 'px';
+                break;
+        }
+        if (directions[dir_index] == 'right' || directions[dir_index] == 'down')
+            elem.style.transitionProperty = 'top, opacity';
         else
-            score += 1;
-        document.getElementById("score").innerHTML = "Score :" + score;
+            elem.style.transitionProperty = 'bottom, opacity';
+        elem.style.transitionDuration = '0s';
+        elem.style.transitionDelay = '0s';
+        elem.style.opacity = 1;
+        if(type == 'miss')
+            elem.textContent = type + ' ' + score_unit.miss;
+        else
+            elem.textContent = type + ' ' + score_unit.combo;
+        elem.style.color = hit_tag_color[type];
+        setTimeout((item, index) => {
+            item.style.transitionDuration = '0.5s';
+            if (directions[index] == 'right' || directions[index] == 'down') {
+                item.style.transitionProperty = 'top, opacity';
+                item.style.top = (parseInt(item.style.top) - game_canvas.height * 0.05) + 'px';
+            }
+            else {
+                item.style.transitionProperty = 'bottom, opacity';
+                item.style.bottom = (parseInt(item.style.bottom) + game_canvas.height * 0.05) + 'px';
+            }
+            item.style.transitionDelay = '0s, 0.5s';
+            item.style.opacity = 0;
+        }, timer_interval, elem, dir_index);
+    }
+
+    window.add_score = function (dir_index, type) {
+        if (score_unit.combo > 40)
+            score_unit.score += 5;
+        else if (score_unit.combo > 20)
+            score_unit.score += 3;
+        else
+            score_unit.score += 1;
+        if (type == 'perfect') {
+            ++score_unit.perfect;
+            ++score_unit.score;
+        }
+        else if (type == 'good')
+            ++score_unit.good;
+        ++score_unit.combo;
+        ++score_unit.tap_times;
+        update_progressBar(score_unit.tap_times);
+        if (score_unit.combo > score_unit.max_combo)
+            score_unit.max_combo = score_unit.combo;
+        score_unit.cur_miss = 0;
+        show_hit_tag(dir_index, type);
+        add_power("hit");
     }
 
     window.draw_handle = function () {
@@ -300,12 +448,24 @@
         key.smaller_rate = 0.9;
         key.type = type || 'single';
         key.during_time = during_time || 0;
+        key.is_hit = false;
+        key.is_miss = 0;
+        key.ticks = 0;
+        key.add_score_ticks = 8;
         key.speed = (() => {
             var rate = handle_size / (is_vertical ? game_canvas.height : game_canvas.width) / 2;
             return (0.5 - rate) * timer_interval / speed_time;
         })();
+        key.tail_length = (() => {
+            return type == 'long' ? key.speed * during_time / timer_interval : 0;
+        })();
         key.update = function () {
-            this.pos += this.is_top_left ? this.speed : -this.speed;
+            if (!this.is_hit && this.is_miss != 1)
+                this.pos += this.is_top_left ? this.speed : -this.speed;
+            else
+                this.tail_length -= this.speed;
+            if (this.is_hit)
+                ++this.ticks;
         }
         return key;
     }
@@ -315,6 +475,7 @@
         if (key.is_vertical) {
             var x = game_canvas.width / 2;
             var y = key.pos * game_canvas.height;
+            var tail_length = key.tail_length * game_canvas.height;
             if (key.is_top_left) {
                 game_context.translate(x, y + key.r / 2);
                 game_context.rotate(Math.PI);
@@ -326,6 +487,7 @@
         else {
             var y = game_canvas.height / 2;
             var x = key.pos * game_canvas.width;
+            var tail_length = key.tail_length * game_canvas.width;
             if (key.is_top_left) {
                 game_context.translate(x + key.r / 2, y);
                 game_context.rotate(Math.PI / 2);
@@ -339,10 +501,19 @@
         if (key.is_top_left ? key.pos > 0.5 - rate : key.pos < 0.5 + rate) {
             key.r *= key.smaller_rate;
             game_context.drawImage(arrow_down, -key.r / 2, -key.r / 2, key.r, key.r);
-            //key.smaller_rate /= 1.2;
         }
         else {
             game_context.drawImage(arrow_down, -key.r / 2, -key.r / 2, key.r, key.r);
+        }
+        if (key.type == 'long') {
+            game_context.strokeStyle = key.is_hit ? 'red' : 'white';
+            game_context.lineWidth = 4;
+            game_context.beginPath();
+            game_context.moveTo(0, key.r / 2);
+            game_context.lineTo(0, key.r / 2 + tail_length);
+            game_context.moveTo(-key.r / 2, key.r / 2 + tail_length);
+            game_context.lineTo(key.r / 2, key.r / 2 + tail_length);
+            game_context.stroke();
         }
         game_context.restore();
     }
@@ -353,22 +524,82 @@
         keys.forEach(key => {
             draw_key(key);
         });
+        long_keys.forEach(key => {
+            draw_key(key[0]);
+        });
     }
 
     window.update_all = function () {
         for (var i = 0; i < keys.length; ++i) {
             keys[i].update();
             var rate = handle_size / (keys[i].is_vertical ? game_canvas.height : game_canvas.width) / 9;
-            if (keys[i].is_top_left ? keys[i].pos > 0.5 - rate : keys[i].pos < 0.5 + rate) {
-                is_combo = false;
-                combo = 0;
-                keys.splice(i, 1);
+            if (keys[i].is_miss != 1 && keys[i].is_top_left ? keys[i].pos > 0.5 - rate : keys[i].pos < 0.5 + rate) {
+                if (keys[i].is_miss == 0) {
+                    if(score_unit.tap_times < 100){
+                        score_unit.combo = 0;
+                        ++score_unit.cur_miss;
+                        show_hit_tag((keys[i].is_vertical ? (keys[i].is_top_left ? 1 : 3) : (keys[i].is_top_left ? 0 : 2)), 'miss');
+                    }
+                    ++score_unit.miss;
+                    add_power("miss");
+                }
+                keys[i].is_miss = 1;
+            }
+            if (keys[i].is_miss == 1) {
+                if (keys[i].type == 'single' || keys[i].tail_length <= 0) {
+                    keys.splice(i, 1);
+                    --i;
+                    continue;
+                }
+            }
+        }
+        for (var i = 0; i < long_keys.length; ++i) {
+            if (press[long_keys[i][1]] == false) {
+                $('#shine_' + directions[long_keys[i][1]]).css('display', 'none');
+                long_keys[i][0].is_miss = 2;
+                long_keys[i][0].is_hit = false;
+                keys.push(long_keys[i][0]);
+                long_keys.splice(i, 1);
+                --i;
+                continue;
+            }
+            long_keys[i][0].update();
+            if (long_keys[i][0].ticks >= long_keys[i][0].add_score_ticks) {
+                long_keys[i][0].ticks = 0;
+                add_score(long_keys[i][1], 'perfect');
+            }
+            if (long_keys[i][0].tail_length <= 0) {
+                $('#shine_' + directions[long_keys[i][1]]).css('display', 'none');
+                long_keys.splice(i, 1);
                 --i;
                 continue;
             }
         }
     }
-
+    window.add_power = function (type) {
+        if(type == 'miss'){
+            if(score_unit.cur_miss > 20)
+                cl.goal = (cl.goal > 5 ? cl.loaded - 5 : 0);
+            else if(score_unit.cur_miss > 10)
+                cl.goal = (cl.goal > 3 ? cl.loaded - 1 : 0);
+            else
+                cl.goal = (cl.goal > 1 ? cl.loaded - 1 : 0);
+        }
+        else if(type == 'hit'){
+            if (score_unit.combo > 40){
+                cl.goal = (cl.goal < 95 ? cl.loaded + 5 : 100);
+            }
+            else if (score_unit.combo > 20){
+                cl.goal = (cl.goal < 97 ? cl.loaded + 3 : 100);
+            }
+            else
+                cl.goal = (cl.goal < 99 ? cl.loaded + 1 : 100);
+        }
+        if(cl.goal == 0){
+            change_page('finish_game');
+            //on_finish(game_mode);
+        }
+    }
     window.timer_update = function () {
         update_all();
         draw_all();
@@ -383,18 +614,90 @@
         else if (mode == 'create_music') {
             analyse_music(true);
         }
-        else if (mode == 'level_mode') {
-            launcher.start();
+        else if (mode == 'level_mode' || mode == 'file_produce') {
+            scheduler.start();
         }
     }
 
+    window.on_finish = function (mode) {
+        var max_score;
+        if (score_unit.all < 20)
+            max_score = score_unit.all * 2;
+        else if (score_unit.all < 40)
+            max_score = 4 * score_unit.all - 40;
+        else
+            max_score = 6 * score_unit.all - 120;
+
+        $('#final_score').get(0).innerHTML = score_unit.score;
+        $('#rank').get(0).innerHTML = get_rank(score_unit.score);
+        console.log(get_rank(score_unit.score));
+        $('#perfect').get(0).innerHTML = "perfect : " + score_unit.perfect;
+        $('#good').get(0).innerHTML = "good : " + score_unit.good;
+        $('#miss').get(0).innerHTML = "miss : " + score_unit.miss;
+        $('#max_combo').get(0).innerHTML = "max_combo : " + score_unit.max_combo;
+        /*
+        $('#finish_game .statement').get(0).innerHTML = `
+            score : ${score_unit.score},
+            perfect: ${score_unit.perfect},
+            good: ${score_unit.good},
+            miss: ${score_unit.miss},
+            max combo: ${score_unit.max_combo},
+            all keys: ${score_unit.all},
+            max score: ${max_score}
+       `;*/
+    }
+    window.get_rank = function(score){
+        var rank = score / score_unit.all;
+        if(rank > 0.95)
+            return 'SSS';
+        else if(rank > 0.9)
+            return 'SS';
+        else if(rank > 0.85)
+            return 'S';
+        else if(rank > 0.8)
+            return 'A';
+        else if(rank > 0.75)
+            return 'B';
+        else if(rank > 0.7)
+            return 'C';
+        else if(rank > 0.65)
+            return 'D';
+        else if(rank > 0.6)
+            return 'E';
+        else
+            return 'F';
+    }
     window.init_game = function () {
         keys = [];
+        long_keys = [];
+        for (var i = 0; i < directions.length; ++i) {
+           document.getElementById('hit_tag_' + directions[i]).style.opacity = 0;
+        }
+        $('.shine').css('display', 'none');
         for (var i = 0; i < directions.length; ++i)
             press[i] = false;
-        score = 0;
-        miss = 0;
+        score_unit.init();
         status = 1;
+        cl = new lightLoader(power_canvas, power_canvas.width, power_canvas.height, 20);
+        setupRAF();
+        cl.init();
+        update_progressBar(0);
+        onresize();
+    }
+
+    window.update_progressBar = function (percent) {
+        var temp = percent / 100;
+        $(function () {
+            progressbar.progressbar({
+                value: percent
+            });
+            if(percent >= 100){
+                var progressbarValue = progressbar.find( ".ui-progressbar-value" );
+                progressbarValue.css({
+                    "background":"yellow"
+                });
+            }
+        });
     }
 
     window.start_schedule = function () {
@@ -454,6 +757,7 @@
                 else {
                     if (can_create) {
                         can_create = false;
+                        ++score_unit.all;
                         keys.push(create_key(parseInt(Math.random() * 124253) % 2,
                             parseInt(Math.random() * 5798321) % 2, 1500));
                         setTimeout(() => { can_create = true; }, 200);
@@ -465,6 +769,11 @@
             }
             if (!audio.paused)
                 requestAnimationFrame(callee);
+            else if (status == 1) {
+                setTimeout(() => {
+                    change_page('finish_game');
+                }, game_finish_wait_time);
+            }
         })();
     }
 
@@ -498,36 +807,47 @@
     var music_editor_mode = 'graph';
 
     window.analyse_music = function (to_start) {
-        var node_list = [];
-        if (music_editor_mode == 'text') {
-            var text = $('#music_editor_text').val();
-            if (/^([\-\+]*[1-7]+#?,[0-9]+;\s*)+$/.test(text)) {
-                text = text.replace(/\s*/g, '');
-            }
-            else {
-                console.log('Wrong music format.');
-                return;
-            }
-            node_list = text.split(';');
-            for (var i = 0; i < node_list.length; ++i) {
-                node_list[i] = node_list[i].split(',');
-            }
+        if (!to_start && status == 2) {
+            status = 0;
         }
-        else if (music_editor_mode == 'graph') {
-            music_graph.node_list.forEach(node => {
-                node_list.push(node.to_data());
-            });
+        else {
+            var node_list = [];
+            if (music_editor_mode == 'text') {
+                var text = $('#music_editor_text').val();
+                if (/^([\-\+]*[1-7]+#?,[0-9]+;\s*)+$/.test(text)) {
+                    text = text.replace(/\s*/g, '');
+                }
+                else {
+                    console.log('Wrong music format.');
+                    return;
+                }
+                node_list = text.split(';');
+                for (var i = 0; i < node_list.length; ++i) {
+                    node_list[i] = node_list[i].split(',');
+                }
+            }
+            else if (music_editor_mode == 'graph') {
+                music_graph.node_list.forEach(node => {
+                    node_list.push(node.to_data());
+                });
+            }
+            status = to_start ? 1 : 2;
+            play_music(node_list, to_start);
         }
-        status = 1;
-        play_music(node_list, to_start);
     }
 
     window.play_music = function (node_list, to_start) {
-        if (!status)
+        if ((!to_start && status != 2) || (to_start && status != 1))
             return;
         var node = node_list.shift();
-        if (node == undefined)
+        if (node == undefined) {
+            if (status == 1) {
+                setTimeout(() => {
+                    change_page('finish_game');
+                }, game_finish_wait_time);
+            }
             return;
+        }
         if (time_map[node[1]] == undefined) {
             play_music(node_list, to_start);
             return;
@@ -539,7 +859,12 @@
         var oscillator = audioContext.createOscillator();
         var gainNode = audioContext.createGain();
         oscillator.connect(gainNode);
-        gainNode.connect(delay);
+        if (to_start) {
+            gainNode.connect(delay);
+        }
+        else {
+            gainNode.connect(audioContext.destination);
+        }
         oscillator.frequency.value = fre_map[node[0]];
         gainNode.gain.setValueAtTime(0, audioContext.currentTime);
         gainNode.gain.linearRampToValueAtTime(20, audioContext.currentTime + 0.01);
@@ -548,7 +873,14 @@
         oscillator.start(audioContext.currentTime);
         oscillator.stop(audioContext.currentTime + time_map[node[1]]);
         if (to_start) {
-            keys.push(create_key(parseInt(Math.random() * 124253) % 2, parseInt(Math.random() * 5798321) % 2, 1500));
+            if (time_map[node[1]] >= 500) {
+                keys.push(create_key(parseInt(Math.random() * 124253) % 2, parseInt(Math.random() * 5798321) % 2, 1500, 'long', time_map[node[1]] / 2));
+                score_unit.all += Math.ceil(time_map[node[1]] / 2 / keys[0].add_score_ticks / timer_interval);
+            }
+            else {
+                ++score_unit.all;
+                keys.push(create_key(parseInt(Math.random() * 124253) % 2, parseInt(Math.random() * 5798321) % 2, 1500));
+            }
         }
         setTimeout(node_list => {
             oscillator.disconnect();
@@ -722,7 +1054,7 @@
     var music_graph = {};
 
     music_graph.init = function () {
-        this.canvas = $('canvas').get(1);
+        this.canvas = $('canvas').get(2);
         this.canvas_jquery = $('#music_editor_graph');
         this.canvas.onkeydown = function (event) {
             var key = event.which || event.keyCode;
@@ -739,26 +1071,30 @@
             else if (key == 40) {
                 (music_graph.node_list[music_graph.select]) && (music_graph.node_list[music_graph.select].value_minus());
             }
-            else if (key == 110) {
+            else if (key == 110 || key == 17) {
                 (music_graph.node_list[music_graph.select]) && (music_graph.node_list[music_graph.select].time_point_toggle());
             }
-            else if (key == 51 || key == 106) {
+            else if (key == 16 || key == 106) {
                 (music_graph.node_list[music_graph.select]) && (music_graph.node_list[music_graph.select].sharp_toggle());
             }
-            else if (key == 33) {
+            else if (key == 33 || key == 221) {
                 (music_graph.node_list[music_graph.select]) && (music_graph.node_list[music_graph.select].field_up());
             }
-            else if (key == 34) {
+            else if (key == 34 || key == 219) {
                 (music_graph.node_list[music_graph.select]) && (music_graph.node_list[music_graph.select].field_down());
             }
-            else if (key == 107) {
+            else if (key == 107 || key == 190) {
                 (music_graph.node_list[music_graph.select]) && (music_graph.node_list[music_graph.select].time_shorter());
             }
-            else if (key == 109) {
+            else if (key == 109 || key == 188) {
                 (music_graph.node_list[music_graph.select]) && (music_graph.node_list[music_graph.select].time_longer());
             }
             else if (97 <= key && key <= 103) {
                 (music_graph.node_list[music_graph.select]) && (music_graph.node_list[music_graph.select].value = (key - 96) + '');
+            }
+            else if (49 <= key && key <= 55) {
+                (music_graph.node_list[music_graph.select]) && (music_graph.node_list[music_graph.select].value = (key - 48) + '');
+
             }
             else if (key == 8) {
                 (music_graph.node_list[music_graph.select]) && (music_graph.node_list.splice(music_graph.select, 1), --music_graph.select)
@@ -1006,7 +1342,7 @@
 
     music_graph.init();
 
-    window.create_level_launcher = function () {
+    /*window.create_level_launcher = function () {
         var launcher = {};
         launcher.order_list = new Array(directions.length);
         launcher.text = '';
@@ -1030,7 +1366,7 @@
         launcher.start = function () {
             if (this.state == 'ready') {
                 this.state = 'run';
-                console.log(this.order_list);
+                audio.play();
                 for (var i = 0; i < this.order_list.length; ++i) {
                     this.parse_order(i);
                 }
@@ -1056,7 +1392,7 @@
                 var speed_time = parseInt(unit[2]);
                 var type = unit[3].trim();
                 var during_time = parseInt(unit[4]);
-                if (isNaN(delay) || isNaN(speed_time) || (type != 'single' && isNaN(during_time)))
+                if (isNaN(delay) || isNaN(speed_time) || (type == 'long' && isNaN(during_time)))
                     continue;
                 if (unit[0]) {
                     var dir_list = unit[0].split(':');
@@ -1084,6 +1420,100 @@
         return launcher;
     }
 
-    var launcher = create_level_launcher();
+    var launcher = create_level_launcher();*/
+
+    window.create_scheduler = function () {
+        var scheduler = {};
+        scheduler.text = '';
+        scheduler.state = 'create';
+        scheduler.order_list = [];
+        scheduler.load = function (text) {
+            this.text = text;
+            this.reset();
+        }
+        scheduler.reset = function () {
+            this.order_list = [];
+            var order_list = this.text.split(';');
+            //xxxx.xx,x:x,type,xxx
+            for (var i = 0; i < order_list.length; ++i) {
+                var unit = order_list[i].trim().split(',');
+                if (unit.length != 3 && unit.length != 4)
+                    continue;
+                var time = parseFloat(unit[0].trim());
+                var type = unit[2].trim();
+                var during_time = parseInt(unit[3]);
+                if ((type != 'single' && type != 'long') || isNaN(time))
+                    continue;
+                if (type == 'long' && isNaN(during_time))
+                    continue;
+                if (unit[1]) {
+                    var dir_list = unit[1].split(':');
+                    var temp = [time];
+                    temp.push([]);
+                    for (var j = 0; j < dir_list.length; ++j) {
+                        var index = parseInt(dir_list[j]) - 1;
+                        if (index >= 0 && index < directions.length) {
+                            temp[1].push({
+                                index: index,
+                                type: type,
+                                during_time: during_time
+                            })
+                        }
+                    }
+                    this.order_list.push(temp);
+                }
+            }
+            this.state = 'ready';
+        }
+        scheduler.start = function () {
+            if (this.state == 'ready') {
+                var scheduler = this;
+                audio.play();
+                (function callee(e) {
+                    for (var i = 0; i < scheduler.order_list.length; ++i) {
+                        if (scheduler.order_list[i][0] < audio.currentTime) {
+                            for (var j = 0; j < scheduler.order_list[i][1].length; ++j) {
+                                var order = scheduler.order_list[i][1][j];
+                                keys.push(create_key(dir_params[directions[order.index]][0],
+                                    dir_params[directions[order.index]][1], speed_time,
+                                    order.type, order.during_time));
+                                ++score_unit.all;
+                                if (order.type == 'long')
+                                    score_unit.all += Math.ceil(order.during_time / keys[0].add_score_ticks / timer_interval);
+                            }
+                        }
+                        else {
+                            break;
+                        }
+                    }
+                    if (i != 0) {
+                        scheduler.order_list.splice(0, i);
+                    }
+                    if (!audio.paused)
+                        requestAnimationFrame(callee);
+                    else if (status == 1) {
+                        setTimeout(() => {
+                            change_page('finish_game');
+                        }, game_finish_wait_time);
+                    }
+                })();
+            }
+        }
+        scheduler.stop = function () {
+            //TODO
+            if (this.state != 'stop') {
+                this.state = 'stop';
+            }
+        }
+        scheduler.pause = function () {
+            //TODO
+        }
+        scheduler.resume = function () {
+            //TODO
+        }
+        return scheduler;
+    }
+
+    var scheduler = create_scheduler();
 
 })(window);
